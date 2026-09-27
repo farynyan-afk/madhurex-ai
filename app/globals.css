@@ -1,92 +1,25 @@
-@import "tailwindcss";
-
-:root {
-  --background: #050612;
-  --foreground: #f7f8ff;
-  --muted: #9ba0c2;
-  --cyan: #64f8ff;
-  --violet: #9b7cff;
-  --pink: #ff72d2;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-html,
-body {
-  margin: 0;
-  min-height: 100%;
-  background:
-    radial-gradient(circle at 50% -10%, rgba(87, 69, 180, 0.35), transparent 35%),
-    var(--background);
-  color: var(--foreground);
-}
-
-body {
-  overflow-x: hidden;
-  font-family: Arial, Helvetica, sans-serif;
-}
-
-button,
-input,
-textarea {
-  font: inherit;
-}
-
-.glass {
-  background: rgba(17, 19, 43, 0.64);
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-}
-
-.glow {
-  box-shadow:
-    0 0 25px rgba(100, 248, 255, 0.16),
-    0 0 80px rgba(155, 124, 255, 0.1);
-}
-
-.gradient-text {
-  background: linear-gradient(100deg, #ffffff, var(--cyan), var(--violet));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-.dot-grid {
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
-  background-size: 42px 42px;
-}
-
-@keyframes pulseGlow {
-  0%, 100% {
-    opacity: 0.45;
-    transform: scale(0.96);
+/* Animated Multi-Mix Gradient Background */
+@keyframes multiColorFlow {
+  0% {
+    background-position: 0% 50%;
   }
-
   50% {
-    opacity: 1;
-    transform: scale(1.04);
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
   }
 }
 
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0);
-  }
-
-  50% {
-    transform: translateY(-10px);
-  }
-}
-
-.animate-pulse-glow {
-  animation: pulseGlow 2.2s ease-in-out infinite;
-}
-
-.animate-float {
-  animation: float 5s ease-in-out infinite;
+.animated-multimix-bg {
+  background: linear-gradient(
+    -45deg,
+    #0b0f19,
+    #1b153b,
+    #082a36,
+    #1e0d29,
+    #051c24
+  );
+  background-size: 400% 400%;
+  animation: multiColorFlow 16s ease infinite;
 }

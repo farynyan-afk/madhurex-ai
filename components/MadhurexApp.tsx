@@ -189,7 +189,7 @@ export default function MadhurexApp() {
   }
 
   return (
-    <main className="dot-grid min-h-screen">
+    <main className="dot-grid min-h-screen animated-multimix-bg relative overflow-hidden">
       <div className="flex min-h-screen">
         <aside
           className={`glass fixed inset-y-0 left-0 z-30 w-80 transform p-5 transition-transform lg:static lg:translate-x-0 ${
