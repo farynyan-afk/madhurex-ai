@@ -1,25 +1,138 @@
-/* Animated Multi-Mix Gradient Background */
-@keyframes multiColorFlow {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #070a13;
+  --foreground: #f8fafc;
+  --muted: #929bb2;
+  --cyan: #5ee7ff;
+  --violet: #a78bfa;
+  --pink: #f0abfc;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+  background: var(--background);
+  color: var(--foreground);
+}
+
+body {
+  margin: 0;
+  font-family: "DM Sans", sans-serif;
+  overflow-x: hidden;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+.font-display {
+  font-family: "Space Grotesk", sans-serif;
+}
+
+.mesh-background {
+  background:
+    radial-gradient(circle at 50% -10%, rgba(91, 231, 255, 0.16), transparent 34%),
+    radial-gradient(circle at 100% 20%, rgba(167, 139, 250, 0.12), transparent 30%),
+    radial-gradient(circle at 0% 85%, rgba(240, 171, 252, 0.1), transparent 28%),
+    #070a13;
+}
+
+.glass {
+  background: rgba(15, 22, 40, 0.68);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 20px 80px rgba(0, 0, 0, 0.2),
+    inset 0 1px rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(24px);
+}
+
+.neon-text {
+  text-shadow:
+    0 0 18px rgba(94, 231, 255, 0.45),
+    0 0 45px rgba(167, 139, 250, 0.25);
+}
+
+.neon-border {
+  box-shadow:
+    0 0 0 1px rgba(94, 231, 255, 0.3),
+    0 0 30px rgba(94, 231, 255, 0.12);
+}
+
+@keyframes float {
+  0%,
   100% {
-    background-position: 0% 50%;
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-12px);
   }
 }
 
-.animated-multimix-bg {
-  background: linear-gradient(
-    -45deg,
-    #0b0f19,
-    #1b153b,
-    #082a36,
-    #1e0d29,
-    #051c24
-  );
-  background-size: 400% 400%;
-  animation: multiColorFlow 16s ease infinite;
+@keyframes pulseGlow {
+  0%,
+  100% {
+    opacity: 0.6;
+    transform: scale(0.95);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+.animate-float {
+  animation: float 5s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2.6s ease-in-out infinite;
+}
+
+.markdown-content p {
+  margin: 0.6rem 0;
+}
+
+.markdown-content ul {
+  margin: 0.6rem 0;
+  padding-left: 1.3rem;
+  list-style: disc;
+}
+
+.markdown-content ol {
+  margin: 0.6rem 0;
+  padding-left: 1.3rem;
+  list-style: decimal;
+}
+
+.markdown-content code {
+  border-radius: 0.4rem;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 0.15rem 0.35rem;
+  font-size: 0.9em;
+}
+
+.markdown-content pre {
+  overflow-x: auto;
+  border-radius: 0.8rem;
+  background: #090d18;
+  padding: 1rem;
+  margin: 0.8rem 0;
+}
+
+.markdown-content pre code {
+  background: transparent;
+  padding: 0;
 }
