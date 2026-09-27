@@ -1,5 +1,5 @@
 import MadhurexApp from "@/components/MadhurexApp";
 
-export default function HomePage() {
+export default function Home() {
   return <MadhurexApp />;
 }

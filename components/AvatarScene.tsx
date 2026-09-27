@@ -1,158 +1,127 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import { Canvas, useFrame } from "@react-three/fiber";
+import {
+  Float,
+  MeshTransmissionMaterial,
+  OrbitControls,
+  Sparkles,
+} from "@react-three/drei";
+import { useRef } from "react";
+import * as THREE from "three";
 
-export default function AvatarScene() {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+type AvatarProps = {
+  status?: "idle" | "listening" | "thinking" | "speaking";
+};
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+function Core({ status }: AvatarProps) {
+  const group = useRef<THREE.Group>(null);
+  const ring = useRef<THREE.Mesh>(null);
 
-    let animId: number;
-    let width = 0;
-    let height = 0;
+  useFrame((state) => {
+    if (!group.current || !ring.current) return;
 
-    let targetMouseX = 0;
-    let targetMouseY = 0;
-    let mouseX = 0;
-    let mouseY = 0;
+    const time = state.clock.elapsedTime;
 
-    const resize = () => {
-      const parent = canvas.parentElement;
-      width = canvas.width = parent ? parent.clientWidth : window.innerWidth;
-      height = canvas.height = parent ? parent.clientHeight : 480;
-    };
-    resize();
-    window.addEventListener("resize", resize);
+    group.current.rotation.y = Math.sin(time * 0.5) * 0.18;
+    group.current.rotation.x = Math.sin(time * 0.35) * 0.05;
 
-    const onMouseMove = (e: MouseEvent) => {
-      const rect = canvas.getBoundingClientRect();
-      targetMouseX = ((e.clientX - rect.left) / width - 0.5) * 120;
-      targetMouseY = ((e.clientY - rect.top) / height - 0.5) * 120;
-    };
-    window.addEventListener("mousemove", onMouseMove);
+    const intensity =
+      status === "listening" ? 1.35 : status === "speaking" ? 1.2 : 0.8;
 
-    const STAR_COUNT = 750;
-    const SPEED = 2.5; // Normal gentle travel speed (Pehle 16 thi)
-    const DEPTH = 1200;
+    ring.current.rotation.z += 0.006 * intensity;
+    ring.current.scale.setScalar(
+      1 + Math.sin(time * (status === "thinking" ? 4 : 2)) * 0.035,
+    );
+  });
 
-    const starPalette = [
-      { r: 255, g: 255, b: 255 }, // White
-      { r: 170, g: 220, b: 255 }, // Soft Cyan
-      { r: 130, g: 180, b: 255 }, // Electric Blue
-      { r: 215, g: 180, b: 255 }, // Lavender Violet
-    ];
-
-    interface Star {
-      x: number;
-      y: number;
-      z: number;
-      pz: number;
-      color: { r: number; g: number; b: number };
-      size: number;
-    }
-
-    const stars: Star[] = [];
-    for (let i = 0; i < STAR_COUNT; i++) {
-      stars.push({
-        x: (Math.random() - 0.5) * width * 2.5,
-        y: (Math.random() - 0.5) * height * 2.5,
-        z: Math.random() * DEPTH,
-        pz: DEPTH,
-        color: starPalette[Math.floor(Math.random() * starPalette.length)],
-        size: Math.random() * 1.5 + 0.8,
-      });
-    }
-
-    let nebulaAngle = 0;
-
-    const animate = () => {
-      mouseX += (targetMouseX - mouseX) * 0.04;
-      mouseY += (targetMouseY - mouseY) * 0.04;
-
-      ctx.fillStyle = "rgba(4, 5, 12, 0.4)";
-      ctx.fillRect(0, 0, width, height);
-
-      const cx = width / 2 + mouseX;
-      const cy = height / 2 + mouseY;
-
-      nebulaAngle += 0.001;
-      const grad = ctx.createRadialGradient(
-        cx + Math.cos(nebulaAngle) * 40,
-        cy + Math.sin(nebulaAngle) * 30,
-        20,
-        cx,
-        cy,
-        Math.max(width, height) * 0.6
-      );
-      grad.addColorStop(0, "rgba(60, 30, 110, 0.15)");
-      grad.addColorStop(0.5, "rgba(20, 50, 95, 0.1)");
-      grad.addColorStop(1, "rgba(0, 0, 0, 0)");
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, width, height);
-
-      for (let i = 0; i < STAR_COUNT; i++) {
-        const s = stars[i];
-        s.pz = s.z;
-        s.z -= SPEED;
-
-        if (s.z <= 0) {
-          s.z = DEPTH;
-          s.pz = DEPTH;
-          s.x = (Math.random() - 0.5) * width * 2.5;
-          s.y = (Math.random() - 0.5) * height * 2.5;
-        }
-
-        const k = 280 / s.z;
-        const px = s.x * k + cx;
-        const py = s.y * k + cy;
-
-        const pk = 280 / s.pz;
-        const pxOld = s.x * pk + cx;
-        const pyOld = s.y * pk + cy;
-
-        if (px >= 0 && px <= width && py >= 0 && py <= height) {
-          const depthRatio = 1 - s.z / DEPTH;
-          const alpha = Math.min(1, Math.max(0.15, depthRatio * 1.2));
-          const currentSize = s.size * depthRatio * 1.8;
-
-          // Subtle streak trail
-          ctx.beginPath();
-          ctx.moveTo(pxOld, pyOld);
-          ctx.lineTo(px, py);
-          ctx.strokeStyle = `rgba(${s.color.r}, ${s.color.g}, ${s.color.b}, ${alpha * 0.6})`;
-          ctx.lineWidth = Math.max(0.5, currentSize * 0.8);
-          ctx.stroke();
-
-          // Star body
-          ctx.beginPath();
-          ctx.arc(px, py, Math.max(0.8, currentSize), 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(${s.color.r}, ${s.color.g}, ${s.color.b}, ${alpha})`;
-          ctx.fill();
-        }
-      }
-
-      animId = requestAnimationFrame(animate);
-    };
-
-    animate();
-
-    return () => {
-      cancelAnimationFrame(animId);
-      window.removeEventListener("resize", resize);
-      window.removeEventListener("mousemove", onMouseMove);
-    };
-  }, []);
+  const accent =
+    status === "listening"
+      ? "#5ee7ff"
+      : status === "thinking"
+        ? "#a78bfa"
+        : status === "speaking"
+          ? "#f0abfc"
+          : "#71f6df";
 
   return (
-    <div className="relative w-full h-[460px] overflow-hidden rounded-3xl border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.8)] bg-[#030308] flex items-center justify-center">
-      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full block" />
-      <div className="absolute inset-0 bg-gradient-to-t from-[#030308] via-transparent to-[#030308]/60 pointer-events-none" />
-    </div>
+    <group ref={group}>
+      <mesh position={[0, 0.4, 0]}>
+        <sphereGeometry args={[1.15, 48, 48]} />
+        <MeshTransmissionMaterial
+          transmission={0.95}
+          thickness={0.8}
+          roughness={0.08}
+          chromaticAberration={0.08}
+          color={accent}
+          emissive={accent}
+          emissiveIntensity={0.22}
+        />
+      </mesh>
+
+      <mesh position={[0, 0.4, 1.03]}>
+        <sphereGeometry args={[0.13, 24, 24]} />
+        <meshBasicMaterial color="#ffffff" />
+      </mesh>
+
+      <mesh position={[-0.35, 0.4, 0.98]}>
+        <sphereGeometry args={[0.08, 20, 20]} />
+        <meshBasicMaterial color={accent} />
+      </mesh>
+
+      <mesh position={[0.35, 0.4, 0.98]}>
+        <sphereGeometry args={[0.08, 20, 20]} />
+        <meshBasicMaterial color={accent} />
+      </mesh>
+
+      <mesh ref={ring} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[1.55, 0.018, 16, 96]} />
+        <meshBasicMaterial color={accent} transparent opacity={0.75} />
+      </mesh>
+
+      <mesh position={[0, -1.15, 0]}>
+        <cylinderGeometry args={[0.5, 0.8, 0.65, 32]} />
+        <meshStandardMaterial
+          color="#111a31"
+          metalness={0.8}
+          roughness={0.2}
+          emissive={accent}
+          emissiveIntensity={0.1}
+        />
+      </mesh>
+    </group>
   );
 }
 
-export { AvatarScene };
+export default function AvatarScene({ status = "idle" }: AvatarProps) {
+  return (
+    <div className="h-[360px] w-full md:h-[460px]">
+      <Canvas camera={{ position: [0, 0.25, 4.5], fov: 42 }}>
+        <ambientLight intensity={0.65} />
+        <pointLight position={[2, 3, 4]} intensity={12} color="#5ee7ff" />
+        <pointLight position={[-3, 1, 2]} intensity={8} color="#a78bfa" />
+
+        <Float speed={1.4} rotationIntensity={0.18} floatIntensity={0.4}>
+          <Core status={status} />
+        </Float>
+
+        <Sparkles
+          count={70}
+          scale={[5, 4, 5]}
+          size={1.4}
+          speed={0.3}
+          color="#8be9ff"
+        />
+
+        <OrbitControls
+          enableZoom={false}
+          enablePan={false}
+          autoRotate
+          autoRotateSpeed={0.35}
+          maxPolarAngle={Math.PI / 1.7}
+          minPolarAngle={Math.PI / 2.7}
+        />
+      </Canvas>
+    </div>
+  );
+}
