@@ -1,37 +1,80 @@
 "use client";
 
 import {
-  Image,
+  ImagePlus,
+  LoaderCircle,
   Mic,
+  MicOff,
   Paperclip,
   Send,
   Square,
 } from "lucide-react";
-import { FormEvent, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type Props = {
   disabled?: boolean;
-  listening?: boolean;
   speaking?: boolean;
+  onStopSpeaking?: () => void;
   onSend: (message: string) => void;
-  onMic: () => void;
-  onStopSpeaking: () => void;
 };
 
 export default function ChatInput({
   disabled,
-  listening,
   speaking,
-  onSend,
-  onMic,
   onStopSpeaking,
+  onSend,
 }: Props) {
   const [value, setValue] = useState("");
-  const fileRef = useRef<HTMLInputElement>(null);
+  const [listening, setListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
 
-  function submit(event: FormEvent) {
-    event.preventDefault();
+  useEffect(() => {
+    if (typeof window === "undefined") return;
 
+    const SpeechRecognition =
+      (window as any).SpeechRecognition ||
+      (window as any).webkitSpeechRecognition;
+
+    if (!SpeechRecognition) return;
+
+    const recognition = new SpeechRecognition();
+
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.lang = "en-US";
+
+    recognition.onstart = () => setListening(true);
+    recognition.onend = () => setListening(false);
+
+    recognition.onresult = (event: any) => {
+      let transcript = "";
+
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        transcript += event.results[i][0].transcript;
+      }
+
+      setValue(transcript);
+    };
+
+    recognitionRef.current = recognition;
+
+    return () => recognition.stop();
+  }, []);
+
+  function toggleListening() {
+    if (!recognitionRef.current) {
+      alert("Speech recognition is not supported in this browser.");
+      return;
+    }
+
+    if (listening) {
+      recognitionRef.current.stop();
+    } else {
+      recognitionRef.current.start();
+    }
+  }
+
+  function submit() {
     const text = value.trim();
 
     if (!text || disabled) return;
@@ -41,69 +84,68 @@ export default function ChatInput({
   }
 
   return (
-    <form
-      onSubmit={submit}
-      className="glass glow flex items-end gap-2 rounded-3xl p-2"
-    >
+    <div className="glass flex items-end gap-2 rounded-3xl p-2">
       <input
-        ref={fileRef}
-        type="file"
-        className="hidden"
-        accept=".txt,.pdf,.doc,.docx,image/*"
-      />
-
-      <button
-        type="button"
-        onClick={() => fileRef.current?.click()}
-        className="rounded-2xl p-3 text-white/45 transition hover:bg-white/10 hover:text-white"
-        aria-label="Upload file"
-      >
-        <Paperclip size={18} />
-      </button>
-
-      <button
-        type="button"
-        className="hidden rounded-2xl p-3 text-white/45 transition hover:bg-white/10 hover:text-white sm:block"
-        aria-label="Upload image"
-      >
-        <Image size={18} />
-      </button>
-
-      <textarea
         value={value}
+        disabled={disabled}
         onChange={(event) => setValue(event.target.value)}
         onKeyDown={(event) => {
           if (event.key === "Enter" && !event.shiftKey) {
             event.preventDefault();
-            submit(event);
+            submit();
           }
         }}
-        rows={1}
         placeholder="Ask Madhurex anything..."
-        className="max-h-32 min-h-12 flex-1 resize-none bg-transparent px-2 py-3 text-sm outline-none placeholder:text-white/35"
+        className="min-w-0 flex-1 bg-transparent px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500"
       />
 
-      <button
-        type="button"
-        onClick={speaking ? onStopSpeaking : onMic}
-        className={`rounded-2xl p-3 transition ${
-          listening || speaking
-            ? "bg-pink-500 text-white"
-            : "text-white/55 hover:bg-white/10 hover:text-white"
-        }`}
-        aria-label={speaking ? "Stop speaking" : "Use microphone"}
-      >
-        {speaking ? <Square size={17} /> : <Mic size={19} />}
-      </button>
+      <div className="flex items-center gap-1">
+        <label className="cursor-pointer rounded-xl p-3 text-slate-400 transition hover:bg-white/10 hover:text-white">
+          <Paperclip size={18} />
+          <input type="file" className="hidden" />
+        </label>
 
-      <button
-        type="submit"
-        disabled={disabled || !value.trim()}
-        className="rounded-2xl bg-gradient-to-r from-cyan-300 to-violet-400 p-3 text-black transition hover:scale-105 disabled:cursor-not-allowed disabled:opacity-35"
-        aria-label="Send message"
-      >
-        <Send size={18} />
-      </button>
-    </form>
+        <label className="cursor-pointer rounded-xl p-3 text-slate-400 transition hover:bg-white/10 hover:text-white">
+          <ImagePlus size={18} />
+          <input type="file" accept="image/*" className="hidden" />
+        </label>
+
+        <button
+          onClick={toggleListening}
+          disabled={disabled}
+          className={`rounded-xl p-3 transition ${
+            listening
+              ? "bg-cyan-300 text-slate-950"
+              : "text-slate-400 hover:bg-white/10 hover:text-white"
+          }`}
+          title={listening ? "Stop listening" : "Start voice input"}
+        >
+          {listening ? <MicOff size={18} /> : <Mic size={18} />}
+        </button>
+
+        {speaking ? (
+          <button
+            onClick={onStopSpeaking}
+            className="rounded-xl bg-pink-300 p-3 text-slate-950 transition hover:bg-pink-200"
+            title="Stop speaking"
+          >
+            <Square size={16} fill="currentColor" />
+          </button>
+        ) : (
+          <button
+            onClick={submit}
+            disabled={disabled || !value.trim()}
+            className="rounded-xl bg-cyan-300 p-3 text-slate-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-40"
+            title="Send message"
+          >
+            {disabled ? (
+              <LoaderCircle size={18} className="animate-spin" />
+            ) : (
+              <Send size={18} />
+            )}
+          </button>
+        )}
+      </div>
+    </div>
   );
 }
