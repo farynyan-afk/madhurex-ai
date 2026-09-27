@@ -65,8 +65,8 @@ export async function POST(request: NextRequest) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.AI_API_KEY}`,
-      },
+        Authorization: "Bearer " + (process.env.AI_API_KEY || ""),
+             },
       body: JSON.stringify({
         model: process.env.AI_MODEL || "gpt-4o-mini",
         stream: false,
